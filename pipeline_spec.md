@@ -1,6 +1,6 @@
 # Pipeline spec — stoic shorts automation (steps 1-4)
 
-Feed this whole doc to Kiro as the starting spec. It's structured as 5 independent modules connected by simple file-based handoffs (JSON in, JSON/media out) so each one can be built, run, and tested in isolation before wiring them together.
+Feed this whole doc as the starting specification. It's structured as 5 independent modules connected by simple file-based handoffs (JSON in, JSON/media out) so each one can be built, run, and tested in isolation before wiring them together.
 
 ## Overall architecture
 
@@ -155,7 +155,7 @@ there are more things
 
 ---
 
-## Build order for Kiro
+## Build order
 
 Build and test in this order, confirming each works standalone with a hand-written sample input file before moving to the next:
 
