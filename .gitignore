@@ -1,0 +1,39 @@
+# Secrets & API Keys
+.env
+*.env
+
+# Python Caches
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+
+# Downloaded Media & Output Videos
+broll/
+outputs/
+output.mp4
+
+# Temporary Scratch Files & Test Audio
+scratch/
+*.mp3
+!music/*.mp3
+
+# Intermediate Generated State
+audio_meta.json
+audio_meta_*.json
+broll_manifest.json
+captions.srt
+captions.ass
+captions_words.json
+quote.json
+script.json
+telemetry_run.json
+used_quotes.json
+used_visual_terms.json
+
+# IDEs & System Files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

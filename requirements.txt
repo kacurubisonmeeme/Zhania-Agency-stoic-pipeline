@@ -1,0 +1,10 @@
+# Stoic Shorts Video Pipeline — Dependencies
+google-genai
+requests
+pillow
+python-dotenv
+edge-tts
+mutagen
+imageio-ffmpeg
+openai-whisper
+psutil

@@ -1,0 +1,74 @@
+{
+  "fear": {
+    "mood": "calm, sparse ambient",
+    "track": "sparse_ambient.mp3",
+    "title": "Where Stars Fall",
+    "artist": "Scott Buckley",
+    "license": "CC BY 4.0",
+    "attribution_required": true,
+    "attribution_text": "Music: \"Where Stars Fall\" by Scott Buckley (https://www.scottbuckley.com.au), used under CC BY 4.0."
+  },
+  "control": {
+    "mood": "steady, contemplative instrumental",
+    "track": "contemplative_pad.mp3",
+    "title": "Petrichor",
+    "artist": "Scott Buckley",
+    "license": "CC BY 4.0",
+    "attribution_required": true,
+    "attribution_text": "Music: \"Petrichor\" by Scott Buckley (https://www.scottbuckley.com.au), used under CC BY 4.0."
+  },
+  "mortality": {
+    "mood": "deep, somber ambient",
+    "track": "somber_ambient.mp3",
+    "title": "Born Of The Sky",
+    "artist": "Scott Buckley",
+    "license": "CC BY 4.0",
+    "attribution_required": true,
+    "attribution_text": "Music: \"Born Of The Sky\" by Scott Buckley (https://www.scottbuckley.com.au), used under CC BY 4.0."
+  },
+  "discipline": {
+    "mood": "forward motion, subtle pulse",
+    "track": "subtle_pulse.mp3",
+    "title": "Bee Hive Pad",
+    "artist": "John Bartmann",
+    "license": "CC0 1.0 Universal",
+    "attribution_required": false,
+    "attribution_text": "Music: \"Bee Hive Pad\" by John Bartmann (https://johnbartmann.com), Public Domain / CC0."
+  },
+  "anger": {
+    "mood": "grounded, tense ambient",
+    "track": "grounded_ambient.mp3",
+    "title": "The Restoration",
+    "artist": "Scott Buckley",
+    "license": "CC BY 4.0",
+    "attribution_required": true,
+    "attribution_text": "Music: \"The Restoration\" by Scott Buckley (https://www.scottbuckley.com.au), used under CC BY 4.0."
+  },
+  "judgment": {
+    "mood": "reflective, quiet instrumental",
+    "track": "quiet_reflection.mp3",
+    "title": "Cendence Master",
+    "artist": "John Bartmann",
+    "license": "CC0 1.0 Universal",
+    "attribution_required": false,
+    "attribution_text": "Music: \"Cendence Master\" by John Bartmann (https://johnbartmann.com), Public Domain / CC0."
+  },
+  "adversity": {
+    "mood": "resilient, rhythmic pulse",
+    "track": "resilient_pulse.mp3",
+    "title": "Hiraeth",
+    "artist": "Scott Buckley",
+    "license": "CC BY 4.0",
+    "attribution_required": true,
+    "attribution_text": "Music: \"Hiraeth\" by Scott Buckley (https://www.scottbuckley.com.au), used under CC BY 4.0."
+  },
+  "wealth": {
+    "mood": "neutral, spacious ambient",
+    "track": "spacious_ambient.mp3",
+    "title": "Ephemera",
+    "artist": "Scott Buckley",
+    "license": "CC BY 4.0",
+    "attribution_required": true,
+    "attribution_text": "Music: \"Ephemera\" by Scott Buckley (https://www.scottbuckley.com.au), used under CC BY 4.0."
+  }
+}

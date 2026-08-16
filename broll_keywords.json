@@ -1,0 +1,59 @@
+{
+  "_comment": "Search terms per theme for b-roll sourcing. Edit freely — 3-5 terms per theme. Lean toward solitary, contemplative, weathered aesthetics rather than generic stock. These feed directly into Pexels/Pixabay search.",
+  "fear": [
+    "man alone dark forest",
+    "storm clouds mountains",
+    "solitary figure fog",
+    "empty road night",
+    "man sitting alone window"
+  ],
+  "control": [
+    "man meditating sunrise",
+    "craftsman working alone",
+    "focused man writing",
+    "disciplined morning routine",
+    "calm river stones"
+  ],
+  "mortality": [
+    "old man sunset contemplating",
+    "weathered hands close up",
+    "autumn leaves falling",
+    "empty park bench morning",
+    "man walking cemetery"
+  ],
+  "discipline": [
+    "weathered hands carving wood",
+    "craftsman workshop focused",
+    "man chopping wood alone",
+    "quiet study lamp books",
+    "man writing journal quiet"
+  ],
+  "anger": [
+    "man deep breathing pause",
+    "clenched fist releasing",
+    "rough sea waves rocks",
+    "man walking away conflict",
+    "fire burning controlled"
+  ],
+  "judgment": [
+    "man reading alone lamp",
+    "chess pieces thinking",
+    "scales balance stone",
+    "man looking out window thinking",
+    "crossroads path decision"
+  ],
+  "adversity": [
+    "man climbing steep mountain",
+    "rough trail rocky path",
+    "man pushing heavy load",
+    "storm then clearing sky",
+    "cracked earth new growth"
+  ],
+  "wealth": [
+    "simple wooden table bread",
+    "man working with hands craft",
+    "coins weathered hands",
+    "modest home morning light",
+    "farmer field sunrise"
+  ]
+}
