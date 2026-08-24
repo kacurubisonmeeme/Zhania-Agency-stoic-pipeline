@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stoic Shorts AI — Model Pipeline Deployment & Studio</title>
+
+  <!-- Google Fonts: Inter & Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="/app.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Navigation / Header -->
+    <header class="app-header">
+      <div class="brand">
+        <div class="logo-icon">🏛️</div>
+        <div class="brand-text">
+          <h1>Stoic Shorts AI</h1>
+          <span class="sub-badge">Model Deployment Studio v2.0</span>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <div class="status-indicator" id="statusPill">
+          <span class="status-dot"></span>
+          <span class="status-text" id="statusText">MODEL IDLE</span>
+        </div>
+        <button class="btn btn-primary glow-btn" id="quickRunBtn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+          Run Model Pipeline
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Grid Layout -->
+    <main class="main-layout">
+      <!-- Left Column: Controls, Stepper & Console -->
+      <section class="left-pane">
+        <!-- Control Panel Card -->
+        <div class="card glass-card">
+          <div class="card-header">
+            <h2>⚡ Model Configuration & Launch</h2>
+          </div>
+          <div class="card-body">
+            <div class="form-group">
+              <label for="themeSelect">Select Stoic Theme</label>
+              <div class="custom-select-wrapper">
+                <select id="themeSelect">
+                  <option value="">🎲 Random (Auto-select from DB)</option>
+                  <option value="adversity">🛡️ Adversity</option>
+                  <option value="fear">⚡ Fear</option>
+                  <option value="control">🎯 Control</option>
+                  <option value="anger">🔥 Anger</option>
+                  <option value="discipline">🏛️ Discipline</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="options-row">
+              <label class="toggle-switch">
+                <input type="checkbox" id="noDownloadToggle">
+                <span class="slider"></span>
+                <span class="toggle-label">Dry Run (--no-download)</span>
+              </label>
+
+              <label class="toggle-switch">
+                <input type="checkbox" id="noCaptionsToggle">
+                <span class="slider"></span>
+                <span class="toggle-label">Skip Captions (--no-captions)</span>
+              </label>
+            </div>
+
+            <button class="btn btn-block btn-accent" id="launchBtn">
+              <span>🚀 Launch Model Pipeline Run</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Pipeline Stepper Card -->
+        <div class="card glass-card">
+          <div class="card-header">
+            <h2>🔄 Pipeline Execution Stepper</h2>
+            <span class="step-active-tag" id="currentStepTag">Ready</span>
+          </div>
+          <div class="card-body">
+            <div class="stepper-grid" id="stepperGrid">
+              <div class="step-card" data-step="quote_picker">
+                <div class="step-num">1</div>
+                <div class="step-info">
+                  <span class="step-title">Quote Picker</span>
+                  <span class="step-desc">Select quote & enforce rotation</span>
+                </div>
+                <div class="step-badge">Pending</div>
+              </div>
+
+              <div class="step-card" data-step="script_generator">
+                <div class="step-num">2</div>
+                <div class="step-info">
+                  <span class="step-title">Script Generator</span>
+                  <span class="step-desc">Gemini 3.6 Flash Father-Son script</span>
+                </div>
+                <div class="step-badge">Pending</div>
+              </div>
+
+              <div class="step-card" data-step="tts_generator">
+                <div class="step-num">3</div>
+                <div class="step-info">
+                  <span class="step-title">TTS Generator</span>
+                  <span class="step-desc">Edge-TTS + Ducked ambient music</span>
+                </div>
+                <div class="step-badge">Pending</div>
+              </div>
+
+              <div class="step-card" data-step="caption_generator">
+                <div class="step-num">4</div>
+                <div class="step-info">
+                  <span class="step-title">Caption Generator</span>
+                  <span class="step-desc">Whisper word-level ASS subtitles</span>
+                </div>
+                <div class="step-badge">Pending</div>
+              </div>
+
+              <div class="step-card" data-step="broll_matcher">
+                <div class="step-num">5</div>
+                <div class="step-info">
+                  <span class="step-title">Vision B-Roll Matcher</span>
+                  <span class="step-desc">Gemini Vision thumbnail re-ranking</span>
+                </div>
+                <div class="step-badge">Pending</div>
+              </div>
+
+              <div class="step-card" data-step="video_renderer">
+                <div class="step-num">6</div>
+                <div class="step-info">
+                  <span class="step-title">Video Renderer</span>
+                  <span class="step-desc">FFmpeg 1080x1920 MP4 composition</span>
+                </div>
+                <div class="step-badge">Pending</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Terminal Console Logs Card -->
+        <div class="card glass-card terminal-card">
+          <div class="card-header">
+            <h2>📜 Real-time Console Terminal</h2>
+            <button class="btn btn-sm btn-outline" id="clearConsoleBtn">Clear</button>
+          </div>
+          <div class="card-body p-0">
+            <div class="terminal-body" id="consoleOutput">
+              <div class="log-line info">[System] Model deployment server connected. Ready for execution.</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right Column: Outputs, Telemetry & Quotes -->
+      <section class="right-pane">
+        <!-- Telemetry Stats Deck -->
+        <div class="telemetry-grid">
+          <div class="metric-card glass-card">
+            <div class="metric-icon">✨</div>
+            <div class="metric-data">
+              <span class="metric-value" id="tokensValue">0</span>
+              <span class="metric-label">Gemini Model Tokens</span>
+            </div>
+          </div>
+
+          <div class="metric-card glass-card">
+            <div class="metric-icon">💾</div>
+            <div class="metric-data">
+              <span class="metric-value" id="downloadValue">0.0 MB</span>
+              <span class="metric-label">Downloaded Assets</span>
+            </div>
+          </div>
+
+          <div class="metric-card glass-card">
+            <div class="metric-icon">📞</div>
+            <div class="metric-data">
+              <span class="metric-value" id="apiCallsValue">0</span>
+              <span class="metric-label">API Invocations</span>
+            </div>
+          </div>
+
+          <div class="metric-card glass-card">
+            <div class="metric-icon">⏱️</div>
+            <div class="metric-data">
+              <span class="metric-value" id="runtimeValue">0s</span>
+              <span class="metric-label">Last Execution Time</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Video Player & Gallery Showcase -->
+        <div class="card glass-card">
+          <div class="card-header">
+            <h2>📹 Generated Video Shorts Library</h2>
+            <button class="btn btn-sm btn-outline" id="refreshVideosBtn">🔄 Refresh</button>
+          </div>
+          <div class="card-body">
+            <div class="video-preview-wrapper" id="videoPreviewContainer">
+              <div class="empty-state" id="emptyVideoState">
+                <div class="empty-icon">🎬</div>
+                <p>No video outputs loaded yet. Click <strong>Run Model Pipeline</strong> to generate your first vertical short!</p>
+              </div>
+              <div class="featured-video-player hidden" id="featuredPlayerWrapper">
+                <video id="mainVideoPlayer" controls playsinline></video>
+                <div class="video-meta-bar">
+                  <span class="video-title" id="featuredVideoTitle">output.mp4</span>
+                  <a href="#" id="downloadVideoBtn" class="btn btn-sm btn-primary" download>⬇️ Download MP4</a>
+                </div>
+              </div>
+            </div>
+
+            <div class="video-gallery-grid" id="videoGalleryGrid"></div>
+          </div>
+        </div>
+
+        <!-- Stoic Quote Database Explorer -->
+        <div class="card glass-card">
+          <div class="card-header">
+            <h2>📜 Stoic Quotes Database Explorer</h2>
+            <span class="badge" id="quoteCountBadge">0 Quotes</span>
+          </div>
+          <div class="card-body">
+            <div class="quotes-filter-pills" id="themePills"></div>
+            <div class="quotes-list-container" id="quotesList"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>
