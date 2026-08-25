@@ -113,8 +113,9 @@ def make_quote_id(quote: dict) -> str:
 def build_prompt(quote: dict, voice_bible: str) -> str:
     length_bucket = quote.get("length_bucket", "medium")
     hook_instruction = (
-        "The hook MUST start with \"Son,\" followed IMMEDIATELY by the seed quote "
-        "spoken word for word — this is NOT optional and NOT up to your judgement. "
+        "The hook MUST open directly with the seed quote spoken word for word — "
+        "this is NOT optional and NOT up to your judgement. "
+        "Do NOT prepend \"Son,\" or any fixed opener word. "
         "ONE exception only: if the quote contains an embedded addressee name or "
         "direct-address term in the middle of the sentence (e.g. \"Lucilius\", "
         "\"my dear Lucilius\", \"my friend\") that would sound wrong in a "
@@ -126,9 +127,9 @@ def build_prompt(quote: dict, voice_bible: str) -> str:
         else
         "This is a LONG quote. For the hook, trim to the single punchiest clause "
         "(under ~12 words) that carries the full weight on its own, then speak that "
-        "verbatim after \"Son,\". Do NOT paraphrase the hook clause — it must be a "
-        "cut from the original wording, not a rewrite. Cover the rest of the quote's "
-        "meaning in Context/Application in the father's own words."
+        "verbatim as the hook. Do NOT prepend \"Son,\" or any fixed opener word. "
+        "Do NOT paraphrase the hook clause — it must be a cut from the original wording, "
+        "not a rewrite. Cover the rest of the quote's meaning in Context/Application in the father's own words."
     )
 
     return f"""Generate a script following the voice bible instructions exactly.
@@ -143,13 +144,13 @@ HOOK RULE: {hook_instruction}
 
 TARGET: 95-110 words total for full_text (all four beats combined).
 
-CRITICAL WORD USAGE RULE: The word "son" MUST appear EXACTLY ONCE in the entire script, right at the very beginning of the hook ("Son,"). Do NOT use the word "son" or "son," anywhere in the context, application, or cta sections.
+CRITICAL VOICE RULE: Speak with the authentic tone of a wise father giving advice to his son. You may use address terms like "son" naturally in the script if it fits, but keep it subtle and never overused.
 
-CRITICAL CTA REWATCH LOOP RULE: The CTA beat MUST end with the word "because..." (or "because") to create an addictive rewatch loop that naturally flows directly back into the opening hook ("Son,"). Example: "What's standing in your way right now that might actually be the way, because..."
+CRITICAL CTA REWATCH LOOP RULE: The CTA beat MUST end with the word "because..." (or "because") to create an addictive rewatch loop that naturally flows directly back into the opening hook. Example: "What's standing in your way right now that might actually be the way, because..."
 
 Return ONLY valid JSON in exactly this format — no markdown fences, no extra keys:
 {{
-  "hook": "<Son, + verbatim quote (or trimmed clause for long)>",
+  "hook": "<verbatim quote (or trimmed clause for long)>",
   "context": "<father grounds the idea in his own experience/observation>",
   "application": "<concrete instruction from father to son, doable today>",
   "cta": "<follow prompt or question ending with 'because...'>"
@@ -283,8 +284,8 @@ def parse_gemini_response(raw: str) -> dict:
 
 def enforce_single_son_and_cta_loop(beats: dict) -> dict:
     hook = beats.get("hook", "").strip()
-    if not hook.lower().startswith("son"):
-        beats["hook"] = f"Son, {hook}"
+    # Strip any accidental leading "Son," or "Son " prefix so hook opens directly with quote
+    beats["hook"] = re.sub(r"^son[,\s]+", "", hook, flags=re.IGNORECASE).strip()
 
     for key in ("context", "application", "cta"):
         if key in beats and beats[key]:
@@ -336,9 +337,6 @@ def validate_beats(beats: dict, quote: dict) -> list[str]:
     warnings = []
 
     hook = beats.get("hook", "")
-    if not hook.lower().startswith("son,"):
-        warnings.append(f'WARN: hook does not start with "Son," — got: {hook[:60]}')
-
     if quote.get("length_bucket") != "long":
         quote_text = quote.get("quote", "")
         if not _hook_words_are_subsequence_of_quote(hook, quote_text):
@@ -354,8 +352,8 @@ def validate_beats(beats: dict, quote: dict) -> list[str]:
 
     full_text_lower = " ".join(beats.values()).lower()
     son_count = len(re.findall(r"\bson\b", full_text_lower))
-    if son_count != 1:
-        warnings.append(f"WARN: 'son' count is {son_count} (expected exactly 1 at the start of the hook).")
+    if son_count > 2:
+        warnings.append(f"WARN: 'son' count is {son_count} (overused in script).")
 
     cta = beats.get("cta", "").strip().lower()
     if not any(w in cta for w in ("because", "since", "for")):
