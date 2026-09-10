@@ -243,7 +243,7 @@ def main() -> None:
     print("=" * 60)
     print(f"  Output       : {out_path}")
     print(f"  Resolution   : {OUT_W}x{OUT_H} (Native 9:16 Vertical)")
-    print(f"  Visual Assets: {len(BEAT_ASSETS)} Vertical 9:16 Shots (Each ≤ 4-5 seconds)")
+    print(f"  Visual Assets: {len(BEAT_ASSETS)} Vertical 9:16 Shots (Each <= 4-5 seconds)")
     print("-" * 60)
 
     audio_dur = get_audio_duration(AUDIO_PATH)
