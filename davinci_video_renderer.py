@@ -1,6 +1,7 @@
 """
-davinci_video_renderer.py — Sequences Leonardo da Vinci master visual assets (9:16 Vertical)
-with motion transitions, audio, music, and burned-in subtitles into a 1080x1920 vertical MP4 short.
+davinci_video_renderer.py — Sequences AI-generated 9:16 vertical master images
+with dynamic motion transitions (Ken Burns + xfade dissolves), audio narration,
+background music, and clean burned-in ASS subtitles.
 """
 
 import argparse
@@ -31,85 +32,78 @@ CAPTIONS_PATH = BASE_DIR / "captions.ass"
 SCRIPT_PATH   = BASE_DIR / "script.json"
 OUTPUTS_DIR   = BASE_DIR / "outputs"
 
-UPLOAD_DIR = Path(r"C:\Users\SmartKid\.gemini\antigravity\brain\18d713e4-a056-4113-a177-38ea55996a47\.user_uploaded")
+MANIFEST_PATH = BASE_DIR / "ai_images_manifest.json"
+ARTIFACT_DIR  = Path(r"C:\Users\SmartKid\.gemini\antigravity\brain\18d713e4-a056-4113-a177-38ea55996a47")
 
-# Mapping of all 9 vertical (9:16) da Vinci master artwork images across the 11 fast-paced shots (max ~4s duration)
-BEAT_ASSETS = [
+DEFAULT_BEAT_ASSETS = [
     {
         "shot": 1,
-        "label": "Hook - Balcony Chairs",
-        "file": UPLOAD_DIR / "media_1788980958753.jpg",
-        "duration": 3.86,
+        "label": "Hook 1 - Elder Philosopher & Water Clock",
+        "file": ARTIFACT_DIR / "seneca_shot01_1789656214453.jpg",
+        "duration": 2.80,
         "zoom_dir": "zoom_in",
     },
     {
         "shot": 2,
-        "label": "Hook - Two Friends Seated",
-        "file": UPLOAD_DIR / "media_1788980886577.jpg",
-        "duration": 3.02,
+        "label": "Hook 2 - Gold Coins Slipping Into Water",
+        "file": ARTIFACT_DIR / "seneca_shot02_1789656257459.jpg",
+        "duration": 2.70,
         "zoom_dir": "zoom_out",
     },
     {
         "shot": 3,
-        "label": "Context - Orator Shouting",
-        "file": UPLOAD_DIR / "media_1788980785099.jpg",
-        "duration": 2.84,
+        "label": "Context 1 - Marketplace & Hourglass Shadows",
+        "file": ARTIFACT_DIR / "seneca_shot03_1789656297956.jpg",
+        "duration": 3.30,
         "zoom_dir": "pan_up",
     },
     {
         "shot": 4,
-        "label": "Context - Man on Foggy Bridge",
-        "file": UPLOAD_DIR / "media_1788980710219.jpg",
-        "duration": 3.66,
+        "label": "Context 2 - Stormy Sea & Stoic Scholar",
+        "file": ARTIFACT_DIR / "seneca_shot04_1789656345219.jpg",
+        "duration": 2.70,
         "zoom_dir": "zoom_in",
     },
     {
         "shot": 5,
-        "label": "Context - Isolated Man Portrait",
-        "file": UPLOAD_DIR / "media_1788980464725.jpg",
-        "duration": 3.10,
+        "label": "Context 3 - Unfinished Dusty Marble Hero",
+        "file": ARTIFACT_DIR / "seneca_shot05_1789656391063.jpg",
+        "duration": 3.30,
         "zoom_dir": "zoom_out",
     },
     {
         "shot": 6,
-        "label": "App - Open Hands on Table",
-        "file": UPLOAD_DIR / "media_1788980502628.jpg",
-        "duration": 3.98,
+        "label": "App 1 - Reclaiming Hours Balcony Sun",
+        "file": ARTIFACT_DIR / "seneca_shot06_1789656460638.jpg",
+        "duration": 3.00,
         "zoom_dir": "zoom_in",
     },
     {
         "shot": 7,
-        "label": "App - Attentive Listener Portrait",
-        "file": UPLOAD_DIR / "media_1788980560366.jpg",
-        "duration": 3.88,
+        "label": "App 2 - Scholar Writing in Journal",
+        "file": ARTIFACT_DIR / "seneca_shot07_1789656515355.jpg",
+        "duration": 3.20,
         "zoom_dir": "pan_down",
     },
     {
         "shot": 8,
-        "label": "App - Unbuckling Leather Strap",
-        "file": UPLOAD_DIR / "media_1788980596931.jpg",
-        "duration": 3.66,
+        "label": "App 3 - Serene Garden & Horizon Archways",
+        "file": ARTIFACT_DIR / "seneca_shot08_1789656566471.jpg",
+        "duration": 3.20,
         "zoom_dir": "zoom_out",
     },
     {
         "shot": 9,
-        "label": "App - Unburdened Strap Focus",
-        "file": UPLOAD_DIR / "media_1788980596931.jpg",
-        "duration": 3.56,
+        "label": "CTA 1 - Stepping Over Broken Sundial",
+        "file": ARTIFACT_DIR / "seneca_shot09_1789656616754.jpg",
+        "duration": 3.30,
         "zoom_dir": "zoom_in",
     },
     {
         "shot": 10,
-        "label": "CTA - Attentive Listener Portrait",
-        "file": UPLOAD_DIR / "media_1788980560366.jpg",
+        "label": "CTA 2 - Seneca Smile & Scroll Loop",
+        "file": ARTIFACT_DIR / "seneca_shot10_1789656666122.jpg",
         "duration": 4.40,
-        "zoom_dir": "zoom_in",
-    },
-    {
-        "shot": 11,
-        "label": "CTA - Solitary Horse in Fog",
-        "file": UPLOAD_DIR / "media_1788980655798.jpg",
-        "duration": 5.87,
         "zoom_dir": "zoom_out",
     },
 ]
@@ -130,7 +124,7 @@ def get_audio_duration(path: Path) -> float:
     result = subprocess.run([FFMPEG, "-i", str(path)], capture_output=True, text=True)
     m = re.search(r"Duration:\s*(\d+):(\d+):([\d.]+)", result.stderr)
     if not m:
-        return 41.83
+        return 31.90
     return int(m.group(1)) * 3600 + int(m.group(2)) * 60 + float(m.group(3))
 
 def process_image_to_video_segment(
@@ -184,38 +178,56 @@ def process_image_to_video_segment(
     ]
     run(cmd, f"render segment {img_path.name}")
 
+def build_xfade_filtergraph(segment_paths: list[Path], assets: list[dict], transition_duration: float = 0.4) -> tuple[str, list[str]]:
+    inputs = []
+    for p in segment_paths:
+        inputs.extend(["-i", str(p)])
+
+    n = len(segment_paths)
+    if n == 1:
+        return "[0:v]copy[outv]", inputs
+
+    filter_chunks = []
+    current_offset = assets[0]["duration"] - transition_duration
+    prev_stream = "0:v"
+
+    transitions = ["dissolve", "fade", "zoomin", "dissolve", "fade", "zoomin", "dissolve", "fade", "zoomin"]
+
+    for i in range(1, n):
+        trans = transitions[(i - 1) % len(transitions)]
+        out_stream = "outv" if i == n - 1 else f"xf{i}"
+        
+        filter_chunks.append(
+            f"[{prev_stream}][{i}:v]xfade=transition={trans}:duration={transition_duration:.2f}:offset={current_offset:.2f}[{out_stream}]"
+        )
+        prev_stream = out_stream
+        if i < n - 1:
+            current_offset += assets[i]["duration"] - transition_duration
+
+    filtergraph = ";".join(filter_chunks)
+    return filtergraph, inputs
+
 def concat_and_mux(
     segment_paths: list[Path],
+    assets: list[dict],
     audio_path: Path,
     captions_path: Path,
-    output_path: Path
+    output_path: Path,
+    use_xfade: bool = True
 ) -> None:
-    with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False, encoding="utf-8") as f:
-        for seg in segment_paths:
-            f.write(f"file '{seg.as_posix()}'\n")
-        concat_file = f.name
+    ass_escaped = str(captions_path).replace("\\", "/").replace(":", "\\:")
 
-    try:
-        concat_tmp = output_path.with_suffix(".concat.mp4")
-        run([
-            FFMPEG, "-y",
-            "-f", "concat",
-            "-safe", "0",
-            "-i", concat_file,
-            "-c", "copy",
-            str(concat_tmp)
-        ], "concat video segments")
+    if use_xfade and len(segment_paths) > 1:
+        filtergraph, input_args = build_xfade_filtergraph(segment_paths, assets, transition_duration=0.4)
+        full_vf = f"{filtergraph};[outv]subtitles='{ass_escaped}'[finalv]"
 
-        ass_escaped = str(captions_path).replace("\\", "/").replace(":", "\\:")
-        vf_sub = f"subtitles='{ass_escaped}'"
-
-        cmd = [
-            FFMPEG, "-y",
-            "-i", str(concat_tmp),
+        cmd = [FFMPEG, "-y"]
+        cmd.extend(input_args)
+        cmd.extend([
             "-i", str(audio_path),
-            "-map", "0:v",
-            "-map", "1:a",
-            "-vf", vf_sub,
+            "-filter_complex", full_vf,
+            "-map", "[finalv]",
+            "-map", f"{len(segment_paths)}:a",
             "-c:v", "libx264",
             "-preset", "fast",
             "-crf", "18",
@@ -224,47 +236,116 @@ def concat_and_mux(
             "-pix_fmt", "yuv420p",
             "-shortest",
             str(output_path)
-        ]
-        run(cmd, "mux audio + burn subtitles")
-        concat_tmp.unlink(missing_ok=True)
-    finally:
-        os.unlink(concat_file)
+        ])
+        run(cmd, "xfade transition render + subtitles")
+    else:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".txt", delete=False, encoding="utf-8") as f:
+            for seg in segment_paths:
+                f.write(f"file '{seg.as_posix()}'\n")
+            concat_file = f.name
+
+        try:
+            concat_tmp = output_path.with_suffix(".concat.mp4")
+            run([
+                FFMPEG, "-y",
+                "-f", "concat",
+                "-safe", "0",
+                "-i", concat_file,
+                "-c", "copy",
+                str(concat_tmp)
+            ], "concat video segments")
+
+            vf_sub = f"subtitles='{ass_escaped}'"
+            cmd = [
+                FFMPEG, "-y",
+                "-i", str(concat_tmp),
+                "-i", str(audio_path),
+                "-map", "0:v",
+                "-map", "1:a",
+                "-vf", vf_sub,
+                "-c:v", "libx264",
+                "-preset", "fast",
+                "-crf", "18",
+                "-c:a", "aac",
+                "-b:a", "192k",
+                "-pix_fmt", "yuv420p",
+                "-shortest",
+                str(output_path)
+            ]
+            run(cmd, "mux audio + burn subtitles")
+            concat_tmp.unlink(missing_ok=True)
+        finally:
+            os.unlink(concat_file)
+
+def get_beat_assets() -> list[dict]:
+    if MANIFEST_PATH.exists():
+        try:
+            data = json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
+            assets = []
+            for item in data:
+                assets.append({
+                    "shot": item["shot"],
+                    "label": item.get("label", f"Shot {item['shot']}"),
+                    "file": Path(item["file"]),
+                    "duration": item.get("duration", 3.0),
+                    "zoom_dir": item.get("zoom_dir", "zoom_in")
+                })
+            if assets:
+                return assets
+        except Exception:
+            pass
+    return DEFAULT_BEAT_ASSETS
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Render 9:16 Da Vinci Custom Image Sequence Video")
+    parser = argparse.ArgumentParser(description="Render Seneca 9:16 Vertical Video")
     parser.add_argument("--output", type=Path, default=None)
     args = parser.parse_args()
 
     OUTPUTS_DIR.mkdir(parents=True, exist_ok=True)
-    out_path = args.output if args.output else OUTPUTS_DIR / "davinci_stoic_short_9x16.mp4"
+    
+    quote_id = "stoic_short"
+    if SCRIPT_PATH.exists():
+        try:
+            s_data = json.loads(SCRIPT_PATH.read_text(encoding="utf-8"))
+            quote_id = s_data.get("quote_id", "stoic_short")
+        except Exception:
+            pass
+
+    import time
+    timestamp = time.strftime("%Y%m%d_%H%M%S")
+    default_name = f"{quote_id}_{timestamp}_9x16.mp4"
+    out_path = args.output if args.output else OUTPUTS_DIR / default_name
+
+    assets = get_beat_assets()
 
     print("=" * 60)
-    print("  Da Vinci Master 9:16 TikTok / YouTube Shorts Video Renderer")
+    print("  Stoic Shorts 9:16 Vertical Video Renderer")
     print("=" * 60)
     print(f"  Output       : {out_path}")
     print(f"  Resolution   : {OUT_W}x{OUT_H} (Native 9:16 Vertical)")
-    print(f"  Visual Assets: {len(BEAT_ASSETS)} Vertical 9:16 Shots (Each <= 4-5 seconds)")
+    print(f"  Visual Assets: {len(assets)} AI-Generated 9:16 Images")
+    print(f"  Transitions  : Native FFmpeg xfade (dissolve/fade/zoomin)")
     print("-" * 60)
 
     audio_dur = get_audio_duration(AUDIO_PATH)
     print(f"  Audio Duration: {audio_dur:.2f}s")
 
-    seg_dir = BASE_DIR / "scratch" / "davinci_segments_9x16"
+    seg_dir = BASE_DIR / "scratch" / "seneca_segments_9x16"
     seg_dir.mkdir(parents=True, exist_ok=True)
 
     segment_paths = []
-    for i, asset in enumerate(BEAT_ASSETS, 1):
+    for i, asset in enumerate(assets, 1):
         img_file = asset["file"]
         dur = asset["duration"]
         zoom_dir = asset["zoom_dir"]
-        seg_out = seg_dir / f"davinci_seg_9x16_{i:02d}.mp4"
+        seg_out = seg_dir / f"seneca_seg_9x16_{i:02d}.mp4"
 
-        print(f"  [{i:02d}/{len(BEAT_ASSETS)}] Rendering {asset['label']:<32} ({dur:.2f}s) | Motion: {zoom_dir:<9} | Image: {img_file.name}")
+        print(f"  [{i:02d}/{len(assets)}] Rendering {asset['label']:<36} ({dur:.2f}s) | Motion: {zoom_dir:<9}")
         process_image_to_video_segment(img_file, seg_out, dur, zoom_dir)
         segment_paths.append(seg_out)
 
-    print("\nConcatenating 9:16 video segments & muxing audio + subtitles...")
-    concat_and_mux(segment_paths, AUDIO_PATH, CAPTIONS_PATH, out_path)
+    print("\nApplying xfade transitions, audio muxing & burning clean ASS subtitles...")
+    concat_and_mux(segment_paths, assets, AUDIO_PATH, CAPTIONS_PATH, out_path, use_xfade=True)
 
     if not out_path.exists() or out_path.stat().st_size == 0:
         print("ERROR: Output video missing or empty!", file=sys.stderr)
@@ -272,10 +353,10 @@ def main() -> None:
 
     size_mb = out_path.stat().st_size / (1024 * 1024)
     print(f"\n{'=' * 60}")
-    print(f"  9:16 VERTICAL VIDEO RENDERING COMPLETE!")
-    print(f"  File     : {out_path.name}")
-    print(f"  Size     : {size_mb:.2f} MB")
-    print(f"  Path     : {out_path}")
+    print(f"  STOIC SHORTS 9:16 VIDEO RENDERING COMPLETE!")
+    print(f"  File        : {out_path.name}")
+    print(f"  Size        : {size_mb:.2f} MB")
+    print(f"  Path        : {out_path}")
     print(f"{'=' * 60}\n")
 
 if __name__ == "__main__":

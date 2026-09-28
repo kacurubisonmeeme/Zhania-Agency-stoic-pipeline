@@ -22,6 +22,7 @@ scratch/
 # Intermediate Generated State
 audio_meta.json
 audio_meta_*.json
+ai_images_manifest.json
 broll_manifest.json
 captions.srt
 captions.ass

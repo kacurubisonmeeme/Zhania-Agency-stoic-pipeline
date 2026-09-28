@@ -55,14 +55,49 @@ def append_log(line: str):
             pipeline_state["current_step"] = match.group(1)
 
 
-def run_orchestrator_worker(theme: str | None, no_download: bool, no_captions: bool):
-    cmd = [sys.executable, str(BASE_DIR / "orchestrator.py")]
-    if theme:
-        cmd.extend(["--theme", theme])
-    if no_download:
-        cmd.append("--no-download")
-    if no_captions:
-        cmd.append("--no-captions")
+import socket
+
+def get_local_ip():
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        ip = s.getsockname()[0]
+        s.close()
+        return ip
+    except Exception:
+        return "127.0.0.1"
+
+def run_orchestrator_worker(theme: str | None, no_download: bool, no_captions: bool, custom_quote: str | None = None, custom_author: str | None = None):
+    if custom_quote:
+        # Write custom quote & script directly
+        q_data = {
+            "quote": custom_quote,
+            "author": custom_author or "Stoic Philosopher",
+            "source": "Mobile Studio Input",
+            "theme": theme or "custom"
+        }
+        (BASE_DIR / "quote.json").write_text(json.dumps(q_data, indent=2), encoding="utf-8")
+        
+        words = custom_quote.strip().split()
+        s_data = {
+            "quote_id": "custom_mobile_quote",
+            "hook": " ".join(words[:min(12, len(words))]),
+            "context": " ".join(words[min(12, len(words)):min(35, len(words))]) if len(words) > 12 else custom_quote,
+            "application": " ".join(words[min(35, len(words)):min(60, len(words))]) if len(words) > 35 else "Focus your energy on what truly matters.",
+            "cta": "What are you going to stop wasting time on today? Think about that, because...",
+            "full_text": custom_quote + " Think about that, because...",
+            "word_count": len(words) + 5
+        }
+        (BASE_DIR / "script.json").write_text(json.dumps(s_data, indent=2), encoding="utf-8")
+        cmd = [sys.executable, str(BASE_DIR / "orchestrator.py"), "--no-download"]
+    else:
+        cmd = [sys.executable, str(BASE_DIR / "orchestrator.py")]
+        if theme:
+            cmd.extend(["--theme", theme])
+        if no_download:
+            cmd.append("--no-download")
+        if no_captions:
+            cmd.append("--no-captions")
 
     with state_lock:
         pipeline_state["status"] = "running"
@@ -227,6 +262,17 @@ class ServerHandler(BaseHTTPRequestHandler):
             self.send_json(get_telemetry_data())
             return
 
+        if path.startswith("/api/download/"):
+            filename = os.path.basename(path)
+            target_path = OUTPUTS_DIR / filename
+            if not target_path.exists() and (OUTPUTS_DIR / "camera" / filename).exists():
+                target_path = OUTPUTS_DIR / "camera" / filename
+            if target_path.exists() and target_path.is_file():
+                self.serve_file(target_path, content_type="video/mp4", as_attachment=True)
+            else:
+                self.send_error(404, "Video File Not Found")
+            return
+
         # Serving static media files from outputs/
         if path.startswith("/outputs/"):
             filename = os.path.basename(path)
@@ -273,10 +319,12 @@ class ServerHandler(BaseHTTPRequestHandler):
             theme = body.get("theme")
             no_download = bool(body.get("no_download", False))
             no_captions = bool(body.get("no_captions", False))
+            custom_quote = body.get("custom_quote")
+            custom_author = body.get("custom_author")
 
             thread = threading.Thread(
                 target=run_orchestrator_worker,
-                args=(theme, no_download, no_captions),
+                args=(theme, no_download, no_captions, custom_quote, custom_author),
                 daemon=True
             )
             thread.start()
@@ -284,6 +332,7 @@ class ServerHandler(BaseHTTPRequestHandler):
             self.send_json({
                 "message": "Pipeline run launched successfully",
                 "theme": theme,
+                "custom_quote": custom_quote,
                 "no_download": no_download,
                 "no_captions": no_captions
             })
@@ -291,12 +340,14 @@ class ServerHandler(BaseHTTPRequestHandler):
 
         self.send_error(404, "Endpoint Not Found")
 
-    def serve_file(self, file_path: Path, content_type: str):
+    def serve_file(self, file_path: Path, content_type: str, as_attachment: bool = False):
         try:
             file_size = file_path.stat().st_size
             self.send_response(200)
             self.send_header("Content-Type", content_type)
             self.send_header("Content-Length", str(file_size))
+            if as_attachment:
+                self.send_header("Content-Disposition", f'attachment; filename="{file_path.name}"')
             self.send_header("Accept-Ranges", "bytes")
             self.send_header("Access-Control-Allow-Origin", "*")
             self.end_headers()
@@ -313,17 +364,19 @@ def main():
     parser.add_argument("--port", type=int, default=8000, help="Port to run web server on (default: 8000)")
     args = parser.parse_args()
 
-    # Ensure static and outputs folders exist
     STATIC_DIR.mkdir(exist_ok=True)
     OUTPUTS_DIR.mkdir(exist_ok=True)
 
+    local_ip = get_local_ip()
     server_address = ("", args.port)
     httpd = HTTPServer(server_address, ServerHandler)
-    print(f"=" * 60)
-    print(f"  STOIC AI PIPELINE MODEL DEPLOYMENT SERVER")
-    print(f"  Running on: http://localhost:{args.port}")
-    print(f"  API Docs   : http://localhost:{args.port}/api/status")
-    print(f"=" * 60)
+    print("=" * 60)
+    print("  STOIC SHORTS AI MOBILE & WEB STUDIO SERVER")
+    print("  ------------------------------------------------------------")
+    print(f"  Local Access  : http://localhost:{args.port}")
+    print(f"  Phone Access  : http://{local_ip}:{args.port}")
+    print("  (Connect your phone to the same Wi-Fi network!)")
+    print("=" * 60)
 
     try:
         httpd.serve_forever()

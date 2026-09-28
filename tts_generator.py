@@ -104,8 +104,42 @@ def measure_duration(mp3_path: Path) -> float:
 
 
 async def synthesise(text: str, voice: str, output_path: Path) -> None:
-    communicate = edge_tts.Communicate(text, voice, rate=SPEAKING_RATE, pitch=PITCH)
-    await communicate.save(str(output_path))
+    import asyncio
+    max_retries = 5
+    for attempt in range(1, max_retries + 1):
+        try:
+            communicate = edge_tts.Communicate(text, voice, rate=SPEAKING_RATE, pitch=PITCH)
+            await communicate.save(str(output_path))
+            if output_path.exists() and output_path.stat().st_size > 0:
+                return
+        except Exception as exc:
+            print(f"  WARN: edge-tts attempt {attempt}/{max_retries} failed: {exc}")
+            if attempt < max_retries:
+                await asyncio.sleep(2.0 * attempt)
+
+    print("  NOTICE: Falling back to gTTS for speech synthesis...")
+    try:
+        from gtts import gTTS
+        tts = gTTS(text=text, lang="en")
+        tts.save(str(output_path))
+        if output_path.exists() and output_path.stat().st_size > 0:
+            return
+    except Exception as exc:
+        print(f"  WARN: gTTS failed: {exc}")
+
+    print("  NOTICE: Falling back to offline pyttsx3 / SAPI5 speech synthesis...")
+    try:
+        import pyttsx3
+        engine = pyttsx3.init()
+        engine.save_to_file(text, str(output_path))
+        engine.runAndWait()
+        if output_path.exists() and output_path.stat().st_size > 0:
+            return
+    except Exception as exc:
+        print(f"ERROR: Offline speech synthesis failed: {exc}", file=sys.stderr)
+
+    print("ERROR: Speech synthesis completely failed.", file=sys.stderr)
+    sys.exit(1)
 
 
 def process_audio(input_path: Path, output_path: Path) -> dict:

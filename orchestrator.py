@@ -84,12 +84,12 @@ def _video_renderer_args(args: argparse.Namespace) -> list[str]:
     return ["--no-captions"] if getattr(args, "no_captions", False) else []
 
 PIPELINE: list[tuple[str, str, object]] = [
-    ("quote_picker",      "quote_picker.py",      _quote_picker_args),
-    ("script_generator",  "script_generator.py",  None),
-    ("tts_generator",     "tts_generator.py",      None),
-    ("caption_generator", "caption_generator.py",  None),
-    ("broll_matcher",     "broll_matcher.py",       _broll_matcher_args),
-    ("video_renderer",    "video_renderer.py",      _video_renderer_args),
+    ("quote_picker",        "quote_picker.py",        _quote_picker_args),
+    ("script_generator",    "script_generator.py",    None),
+    ("tts_generator",       "tts_generator.py",        None),
+    ("caption_generator",   "caption_generator.py",    None),
+    ("ai_image_generator",  "ai_image_generator.py",   None),
+    ("video_renderer",      "davinci_video_renderer.py", _video_renderer_args),
 ]
 
 

@@ -1,5 +1,5 @@
 /**
- * app.js — Frontend Controller for Stoic Shorts AI Deployment Studio
+ * app.js — Mobile & Web Studio Controller for Stoic Shorts AI
  */
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -9,6 +9,13 @@ document.addEventListener("DOMContentLoaded", () => {
   const launchBtn = document.getElementById("launchBtn");
   const quickRunBtn = document.getElementById("quickRunBtn");
   const themeSelect = document.getElementById("themeSelect");
+  const customQuoteInput = document.getElementById("customQuoteInput");
+  const customAuthorInput = document.getElementById("customAuthorInput");
+  const dbModeForm = document.getElementById("dbModeForm");
+  const customModeForm = document.getElementById("customModeForm");
+  const tabDbBtn = document.getElementById("tabDbBtn");
+  const tabCustomBtn = document.getElementById("tabCustomBtn");
+
   const noDownloadToggle = document.getElementById("noDownloadToggle");
   const noCaptionsToggle = document.getElementById("noCaptionsToggle");
   const consoleOutput = document.getElementById("consoleOutput");
@@ -35,6 +42,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const themePills = document.getElementById("themePills");
   const quotesList = document.getElementById("quotesList");
 
+  let studioMode = "db"; // "db" or "custom"
   let pollInterval = null;
   let lastLoggedCount = 0;
   let allQuotesData = [];
@@ -56,6 +64,36 @@ document.addEventListener("DOMContentLoaded", () => {
   fetchQuotes();
   fetchVideos();
 
+  // Tab switching
+  tabDbBtn.addEventListener("click", () => {
+    studioMode = "db";
+    tabDbBtn.classList.add("active");
+    tabCustomBtn.classList.remove("active");
+    dbModeForm.classList.remove("hidden");
+    customModeForm.classList.add("hidden");
+  });
+
+  tabCustomBtn.addEventListener("click", () => {
+    studioMode = "custom";
+    tabCustomBtn.classList.add("active");
+    tabDbBtn.classList.remove("active");
+    customModeForm.classList.remove("hidden");
+    dbModeForm.classList.add("hidden");
+  });
+
+  // Mobile Bottom Navigation Tabs
+  document.querySelectorAll(".mobile-nav-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".mobile-nav-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      const targetId = btn.getAttribute("data-target");
+      const targetEl = document.getElementById(targetId);
+      if (targetEl) {
+        targetEl.scrollIntoView({ behavior: "smooth" });
+      }
+    });
+  });
+
   // Event Listeners
   launchBtn.addEventListener("click", triggerPipelineRun);
   quickRunBtn.addEventListener("click", triggerPipelineRun);
@@ -72,6 +110,11 @@ document.addEventListener("DOMContentLoaded", () => {
       no_download: noDownloadToggle.checked,
       no_captions: noCaptionsToggle.checked
     };
+
+    if (studioMode === "custom" && customQuoteInput.value.trim()) {
+      payload.custom_quote = customQuoteInput.value.trim();
+      payload.custom_author = customAuthorInput.value.trim() || "Stoic Philosopher";
+    }
 
     try {
       launchBtn.disabled = true;
@@ -275,10 +318,46 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  const sharePhoneBtn = document.getElementById("sharePhoneBtn");
+
   function setMainVideo(video) {
     mainVideoPlayer.src = video.url;
     featuredVideoTitle.textContent = video.filename;
-    downloadVideoBtn.href = video.url;
+    downloadVideoBtn.href = `/api/download/${video.filename}`;
+    downloadVideoBtn.setAttribute("download", video.filename);
+
+    if (sharePhoneBtn) {
+      sharePhoneBtn.onclick = () => saveToPhoneCamera(video);
+    }
+  }
+
+  async function saveToPhoneCamera(video) {
+    const videoUrl = `/outputs/${video.filename}`;
+    if (navigator.share) {
+      try {
+        const response = await fetch(videoUrl);
+        const blob = await response.blob();
+        const file = new File([blob], video.filename, { type: "video/mp4" });
+
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({
+            title: "Stoic Short 9:16 Video",
+            text: "Stoic Short Video",
+            files: [file]
+          });
+          return;
+        }
+      } catch (err) {
+        console.log("Web Share fallback to direct attachment download:", err);
+      }
+    }
+
+    const a = document.createElement("a");
+    a.href = `/api/download/${video.filename}`;
+    a.download = video.filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
   }
 
   // Quotes Database Fetch
@@ -343,6 +422,15 @@ document.addEventListener("DOMContentLoaded", () => {
           <span class="badge">${q.theme}</span>
         </div>
       `;
+      card.style.cursor = "pointer";
+      card.addEventListener("click", () => {
+        // Populate custom quote input when tapped
+        studioMode = "custom";
+        tabCustomBtn.click();
+        customQuoteInput.value = q.quote;
+        customAuthorInput.value = q.author;
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      });
       quotesList.appendChild(card);
     });
   }
