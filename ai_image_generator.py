@@ -173,6 +173,16 @@ def generate_procedural_fallback_art(out_path: Path, shot_num: int, label: str, 
     print(f"  -> Generated dynamic unique canvas frame: {out_path.name}")
 
 
+def get_api_keys():
+    """Retrieve all available Gemini API keys from environment variables."""
+    keys = []
+    for key_name in ["GEMINI_API_KEY_1", "GEMINI_API_KEY_2", "GEMINI_API_KEY_3", "GEMINI_API_KEY", "GOOGLE_API_KEY"]:
+        val = os.environ.get(key_name)
+        if val and val not in keys:
+            keys.append(val)
+    return keys
+
+
 def generate_artworks():
     script_data, quote_data = load_context()
     quote_text = script_data.get("full_text") or quote_data.get("quote", "Stoic wisdom for daily focus.")
@@ -188,17 +198,17 @@ def generate_artworks():
     print(f"Author       : {author}")
     print(f"Theme        : {theme}")
     
-    api_key = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
-    client = None
-    
-    if api_key and not api_key.startswith("AQ."):
-        # Check if key is valid (Antigravity keys starting with AQ. are internal proxy keys)
+    api_keys = get_api_keys()
+    print(f"Found {len(api_keys)} API keys for round-robin rotation.")
+
+    clients = []
+    for k in api_keys:
         try:
             from google import genai
-            client = genai.Client(api_key=api_key)
-            print("Successfully initialized Google GenAI client.")
+            c = genai.Client(api_key=k)
+            clients.append((k, c))
         except Exception as e:
-            print(f"GenAI SDK notice: {e}.")
+            print(f"GenAI SDK notice for key: {e}.")
 
     generated_manifest = []
 
@@ -209,29 +219,34 @@ def generate_artworks():
         full_prompt = f"{beat['prompt']}, {STYLE_PROMPT}"
         success = False
 
-        if client:
-            try:
-                from google.genai import types
-                print(f"Generating Shot {idx}/10 with Imagen 3...")
-                result = client.models.generate_images(
-                    model="imagen-3.0-generate-002",
-                    prompt=full_prompt,
-                    config=types.GenerateImagesConfig(
-                        number_of_images=1,
-                        output_mime_type="image/jpeg",
-                        aspect_ratio="9:16",
-                        person_generation="ALLOW_ADULT"
+        if clients:
+            # Try clients starting at round-robin offset: (idx - 1) % len(clients)
+            start_offset = (idx - 1) % len(clients)
+            for attempt_idx in range(len(clients)):
+                k_str, client = clients[(start_offset + attempt_idx) % len(clients)]
+                try:
+                    from google.genai import types
+                    print(f"Generating Shot {idx}/10 with Imagen 3 using API Key {(start_offset + attempt_idx) % len(clients) + 1}...")
+                    result = client.models.generate_images(
+                        model="imagen-3.0-generate-002",
+                        prompt=full_prompt,
+                        config=types.GenerateImagesConfig(
+                            number_of_images=1,
+                            output_mime_type="image/jpeg",
+                            aspect_ratio="9:16",
+                            person_generation="ALLOW_ADULT"
+                        )
                     )
-                )
-                if result.generated_images:
-                    from PIL import Image
-                    gen_img = result.generated_images[0]
-                    img = Image.open(io.BytesIO(gen_img.image.image_bytes))
-                    img.save(str(out_path), quality=95)
-                    print(f"  -> Saved 9:16 AI Artwork: {out_path.name}")
-                    success = True
-            except Exception as exc:
-                print(f"  -> API note for shot {idx}: {exc}")
+                    if result.generated_images:
+                        from PIL import Image
+                        gen_img = result.generated_images[0]
+                        img = Image.open(io.BytesIO(gen_img.image.image_bytes))
+                        img.save(str(out_path), quality=95)
+                        print(f"  -> Saved 9:16 AI Artwork: {out_path.name}")
+                        success = True
+                        break
+                except Exception as exc:
+                    print(f"  -> API key {(start_offset + attempt_idx) % len(clients) + 1} note for shot {idx}: {exc}")
 
         if not success:
             # Generate dynamic procedural Renaissance artwork frame tailored to THIS quote & theme
